@@ -7,6 +7,7 @@ require '../controller/listfacture.php'
   <li> <a data-toggle="tab" href="#home2">Factura Única</a></li>
   <li><a data-toggle="tab" href="#ngeneral">Nota crédito general </a></li>
   <li><a data-toggle="tab" href="#menunota">Nota crédito Única </a></li>
+  <li><a data-toggle="tab" href="#menunotadebito">Nota debito Única </a></li>
   <li> <a data-toggle="tab" href="#jsonx">Json</a></li>
 </ul>
 <div class="tab-content">
@@ -203,6 +204,27 @@ require '../controller/listfacture.php'
         enviar</strong>
     </div>
   </div>
+  <div id="menunotadebito" class="tab-pane fade">
+    <H3>NOTA DÉBITO ÚNICA</H3>
+    <div class="row mt-5">
+      <div class="col-lg-6 col-md-12">
+        <form method="post" action="../controller/note_debit.php" autocomplete="off">
+          <div class="row">
+            <div class="col-lg-10">
+              <label>consecutivo de la Nota débito</label>
+              <div class="form-group">
+                <input class="form-control" id="notaunica" name="notaunica"
+                  placeholder="Digitar # de la nota(Consecutivo) Ejem:43183" type="text">
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <input class="btn btn-primary" type="submit" value="Enviar nota debito unica">
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
   <div id="jsonx" class="tab-pane fade">
     <div class="row">
       <div class="col-lg-4 mt-5">
@@ -219,14 +241,24 @@ require '../controller/listfacture.php'
       <div class="col-lg-4 mt-5">
         <form action="../controller/notajson.php" method="POST">
           <div class="form-group">
-            <label for="">Digite el consecutivo de la nota</label>
+            <label for="">Digite el consecutivo de la nota crédito</label>
             <input type="text" class="form-control" name="not" id="not">
           </div>
           <button type="submit" class="btn btn-danger btn-sm">VER</button>
         </form>
       </div>
     </div>
-
+    <div class="row">
+      <div class="col-lg-4 mt-5">
+        <form action="../controller/notadebitjson.php" method="POST">
+          <div class="form-group">
+            <label for="">Digite el consecutivo de la nota débito</label>
+            <input type="text" class="form-control" name="notdebito" id="notdebito">
+          </div>
+          <button type="submit" class="btn btn-success btn-sm">VER</button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 <?php

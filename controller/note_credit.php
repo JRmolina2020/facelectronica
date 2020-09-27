@@ -321,13 +321,14 @@
                     $razon = 6;
                 }
 
+
                 $data[] = array(
                     "nota" =>  $this->clear->cadena($observacion),
                     "numero" => $this->reg->consecutivo,
                     "codigo_empresa" => 80,
                     "tipo_documento" => $tipo_documento,
                     "prefijo" => $this->reg->prefijo,
-                    'fecha_documento' =>  '2020-07-29', //$this->reg->fecha_documento,
+                    'fecha_documento' =>   $this->reg->fecha_documento,
                     "valor_descuento" =>  0,
                     "anticipos" => null,
                     "valor_ico" => 0.0,
@@ -347,7 +348,7 @@
                         "departamento" => $departamento,
                         "ciudad" => $ciudad,
                         "barrio" => $this->clear->cadena($barrio) . "-" . $this->clear->cadena($this->reg->ubicacion_envio),
-                        "correo" => "",
+                        "correo" => $this->reg->correo,
                         "telefono" => intval($telefono),
                         "direccion" => $this->clear->cadena($this->reg->direccion),
                         "documento" => $nit,

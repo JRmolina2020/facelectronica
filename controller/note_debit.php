@@ -15,214 +15,64 @@ class App
   public $detalle;
   public $clear;
   public $nnota; //input consecutivo
-  //variables globales para producto
-  public $tipo; //tipo_producto
-  public $tiponotac;
-
-  ///DEFINIDOS POR NOTA SIN CODIGO
   public $rsptadn;
-  public $cantidadl;
-  public $totalenblanco;
-  public $ivaenblanco;
+
+
   //END
   public function __construct()
   {
     $this->fac = new Facture();
-    //parametro para la consulta por fecha
-    $this->fechac = isset($_POST["fechanota"]) ? ($_POST["fechanota"]) : "";
-    $this->nnota = isset($_POST["not"]) ? ($_POST["not"]) : "";
-    if (empty($this->nnota)) {
-      $this->rspta = $this->fac->notacreditogeneral($this->fechac);
-    } else {
-      $this->rspta = $this->fac->notacreditounica($this->nnota);
-    }
+    $this->nnota = isset($_POST["notaunica"]) ? ($_POST["notaunica"]) : "";
+    $this->rspta = $this->fac->notadebito($this->nnota);
     $this->clear = new Clear();
     date_default_timezone_set("America/Bogota");
     $this->fecha = date("Y-m-d");
-    $this->tipo = 1;
-  }
-  function countlineafactura($id)
-  {
-    if ($this->tiponotac == 3) {
-      $totlinea = $this->fac->countlineanotasdevolucion($id);
-      $regc = $totlinea->fetch_object();
-      return $regc->totallinea;
-    } else {
-      $totlinea = $this->fac->countlineanotasincodigo($id);
-      $regc = $totlinea->fetch_object();
-      return $regc->totallinea;
-    }
   }
 
-  function detalle($id)
+
+  function detalle($iva, $bruto, $neto)
   {
-    $id = $id;
+
     $this->detalle = array();
-    if ($this->tiponotac == 3) {
-      $this->rsptad = $this->fac->compraDetalle($id);
+    if ($iva == null || $iva = '' || $iva == 0) {
+      $iva = 0;
     } else {
-      $this->rsptad = $this->fac->compraDetalleSincodigo($id);
-      //CON ESTA LINEA SABEMOS CUANTOS ARTICULOS TRAE LA NOTA
-      $respuesta =  $this->fac->cantidadproductoCompradetalle($id);
-      $cantidadl = $respuesta->fetch_object();
-      $this->cantidadl = $cantidadl->tot;
-      //TRAER TOTAL
-      $respuesta2 =  $this->fac->traertotal($id);
-      $toti = $respuesta2->fetch_object();
-      $this->totalenblanco = $toti->total;
-      $this->ivaenblanco = $toti->iva;
+      $iva = 19;
     }
-
-    while ($this->reg = $this->rsptad->fetch_object()) {
-      //Valindando la cantidad de productos si es en caja o si es por unidad
-      if ($this->reg->cantidad == 0) {
-        $cantidad = $this->reg->caja;
-        $valor_unitario_bruto = $this->reg->subtotal / $cantidad;
-        $totalcd = $this->reg->totalcd / $cantidad;
-        $embalaje = 'caja';
-      } else {
-        $cantidad = $this->reg->cantidad;
-        $embalaje = 'und';
-        if (
-          $this->reg->valor_unitario_bruto < 0.01 || $this->reg->valor_unitario_bruto == ""
-          || $this->reg->valor_unitario_bruto == 0
-        ) {
-          $valor_unitario_bruto = 0.01;
-          $this->tipo = 4; //tipo de producto
-        } else {
-          //obteniendo el valor unitario , sin son unidad
-          $valor_unitario_bruto = $this->reg->totalcd / $cantidad;
-          $totalcd = $this->reg->totalcd / $cantidad;
-        }
-      }
-      //validando si el producto dado es regalo o no.
-      if ($this->reg->totalcd == 0 ||  $this->reg->valor_unitario_bruto == 0) {
-        $this->tipo = 4;
-        $valor_unitario_bruto = 0.01;
-        $totalcd = 0.01;
-      } else {
-        $this->tipo = 1;
-      }
-
-      //HACIENDO LAS VALIDACIONES POR SI EL DOCUMENTO ES UN NC SIN CODIGO
-      if ($this->tiponotac == 3) {
-        $valor_unitario_bruto = $valor_unitario_bruto;
-      } else {
-        if ($this->reg->cantidad2 == 0) {
-          $embalaje = "caja";
-
-          if ($this->reg->caja2 == 0) { //POR SI LA DIVISION ES 0
-            $valor_unitario_bruto = $this->reg->subtotal / 1;
-            $cantidad = 1;
-            $totalcd = 0;
-            $embalaje = "";
-          } else {
-            // SI EL PRODUCTO TIENE MAS DE 1 LINEA 
-            if ($this->cantidadl > 1) {
-              $valor_unitario_bruto = $this->reg->cd2total;
-              $cantidad = $this->reg->caja2;
-              $totalcd = $this->reg->cd2total; //aqui
-            } else {
-              $valor_unitario_bruto = $this->reg->subtotal / $this->reg->caja2;
-              $cantidad = $this->reg->caja2;
-              $totalcd = $this->reg->subtotal / $cantidad;
-            }
-          }
-        } else {
-          $embalaje = "und";
-          if ($this->reg->cantidad2 == 0) {
-            $valor_unitario_bruto = $this->reg->subtotal / 1;
-            $cantidad = 1;
-            $totalcd = 0;
-            $embalaje = "";
-          } else {
-            //SI LA NC TIENE MAS DE 1 PRODUCTO
-            if ($this->cantidadl > 1) {
-              $valor_unitario_bruto = $this->reg->cd2total;
-              $cantidad = $this->reg->cantidad2;
-              $totalcd = $this->reg->cd2total; //aqui
-            } else {
-              $valor_unitario_bruto = $this->reg->subtotal / $this->reg->cantidad2;
-              $cantidad = $this->reg->cantidad2;
-              $totalcd = $this->reg->subtotal / $cantidad;
-            }
-          }
-        }
-      }
-
-      //END
-      $this->detalle[] = array(
-        "tipo" => $this->tipo,
-        "marca" => "",
-        "codigo" => $this->reg->codigo,
-        "nombre" =>  $this->clear->cadena($this->reg->nombre),
-        "cantidad" => $cantidad,
-        "muestra_producto" => "01",
-        "unidad_cantidad" => $embalaje,
-        "impuestos" => array(
-          array(
-            "tipo" => "01",
-            "porcentaje" => $this->reg->iva
-          )
-        ),
-        "descuentos" => array(
-          array(
-            "razon" => "DescuentoB",
-            "valor" => 0.0,
-            "porcentaje" =>  0.0
-          ),
-        ),
-        "extensibles" =>
+    return array(array(
+      "tipo" => 1,
+      "marca" => "",
+      "codigo" => 499901,
+      "nombre" =>  'Anulacíon de nota crédito',
+      "cantidad" => 1,
+      "muestra_producto" => "01",
+      "unidad_cantidad" => 'zzz',
+      "impuestos" => array(
         array(
-          "tipo_embalaje" => "",
-          "tipo_empaque" => $embalaje,
-          "bodega" => $this->reg->bodega
-        ),
-        "tipo_gravado" => 1,
-        "valor_referencial" => 0.0,
-        "valor_unitario_bruto" => round($valor_unitario_bruto, 2),
-        "valor_unitario_sugerido" => round($totalcd, 2)
-      );
-    }
-    //ALGUNAS NC SIN CODIGO VIENEN SIN PRODUCTOS RELACIONADOS AQUI LES RELACIONAMOS UNO
-    if (empty($this->detalle)) {
-      return array(array(
-        "tipo" => 1,
-        "marca" => "",
-        "codigo" => 1111,
-        "nombre" =>  'Sin productos Relacionados',
-        "cantidad" => 1,
-        "muestra_producto" => "01",
-        "unidad_cantidad" => 'zzz',
-        "impuestos" => array(
-          array(
-            "tipo" => "01",
-            "porcentaje" => $this->ivaenblanco
-          )
-        ),
-        "descuentos" => array(
-          array(
-            "razon" => "DescuentoB",
-            "valor" => 0.0,
-            "porcentaje" =>  0.0
-          ),
-        ),
-        "extensibles" =>
+          "tipo" => "01",
+          "porcentaje" => $iva
+        )
+      ),
+      "descuentos" => array(
         array(
-          "tipo_embalaje" => "",
-          "tipo_empaque" => '',
-          "bodega" => ''
+          "razon" => "DescuentoB",
+          "valor" => 0.0,
+          "porcentaje" => ''
         ),
-        "tipo_gravado" => 1,
-        "valor_referencial" => 0.0,
-        "valor_unitario_bruto" => round($this->totalenblanco),
-        "valor_unitario_sugerido" => round($this->totalenblanco)
-      ));
-      //END
-    } else {
-      //SI TIENEN PRODUCTO RELACIONADO SE RETORNA LO NORMAL
-      return ($this->detalle);
-    }
+      ),
+      "extensibles" =>
+      array(
+        "tipo_embalaje" => "",
+        "tipo_empaque" => '',
+        "bodega" => ''
+      ),
+      "tipo_gravado" => 1,
+      "valor_referencial" => 0.0,
+      "valor_unitario_bruto" => $bruto,
+      "valor_unitario_sugerido" => $bruto
+    ));
+    //END
+
   }
   function Consultas()
   {
@@ -314,20 +164,14 @@ class App
         $resolucion = "";
       }
       $observacion = str_replace("\r\n", '', $this->reg->observacion);
-      $this->tiponotac = $this->reg->tipo_documento;
-      if ($this->tiponotac == 3) {
-        $razon = 1;
-      } else {
-        $razon = 6;
-      }
 
       $data[] = array(
         "nota" =>  $this->clear->cadena($observacion),
         "numero" => $this->reg->consecutivo,
         "codigo_empresa" => 80,
-        "tipo_documento" => $tipo_documento,
+        "tipo_documento" => 92,
         "prefijo" => $this->reg->prefijo,
-        'fecha_documento' =>  $this->reg->fecha_documento,
+        'fecha_documento' =>  '2020-09-27',
         "valor_descuento" =>  0,
         "anticipos" => null,
         "valor_ico" => 0.0,
@@ -336,7 +180,7 @@ class App
         "valor_neto" => $this->reg->valor_neto,
         "metodo_pago" => 1,
         "valor_retencion" => $this->reg->valor_retencion,
-        "factura_afectada" => 0,
+        "factura_afectada" => strtoupper($this->reg->facturap),
         "fecha_expiracion" =>  $this->reg->fecha_expiracion,
         "subtipo_factura" => '10',
         //CLIENTES ARRAY
@@ -393,26 +237,17 @@ class App
           "asesor" => $this->clear->cadena($this->reg->asesor),
           "pedido" => $pedido,
           "zona" => $this->reg->zona,
-          'cantidad_productos'     =>  $this->countlineafactura($this->reg->id),
+          'cantidad_productos'     =>  '0'
         ),
         'nota_debito'     => array(
-          "razon" => 0,
-          "factura" => "",
-          "id_felam" => 0,
-          "tipo_documento" => "",
-          "descripcion_razon" => ""
+          "razon" => 4,
+          "factura" =>   strtoupper($this->reg->facturap),
+          "id_felam" => '',
+          "tipo_documento" => 32,
+          "descripcion_razon" =>  $this->clear->cadena($observacion),
         ),
-        'nota_credito'     => array(
-          "razon" => $razon,
-          "factura" =>  strtoupper($this->reg->facturap),
-          "id_felam" => 0,
-          "tipo_documento" => "20",
-          "descripcion_razon" =>  $this->clear->cadena($observacion)
-
-        ),
-
         //productos
-        'productos'  =>  $this->detalle($this->reg->id)
+        'productos'  =>  $this->detalle($this->reg->valor_iva, $this->reg->valor_bruto, $this->reg->valor_neto)
 
       );
     }
@@ -421,7 +256,17 @@ class App
       header("Location: ../view/errnote.php");;
       die();
     } else {
-      echo json_encode($data);
+      // echo json_encode($data);
+      $jstring =  json_encode($data, true);
+      $zip = new ZipArchive();
+      $filename = "archivo-" . $this->fecha . ".zip";
+      if ($zip->open($filename, ZipArchive::CREATE) !== TRUE) {
+        exit("cannot open <$filename>\n");
+      }
+      $zip->addFromString("archivo-" . $this->fecha . ".txt", $jstring);
+      $zip->close();
+      $api = new Login();
+      $api->Uploader($filename);
     }
   }
 }

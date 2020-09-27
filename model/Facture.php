@@ -121,7 +121,7 @@ class Facture
         C.TIPO_REGIMEN as tipo_regimen,C.COD_POSTAL as postal,
         C.TELEFONOS as telefono,C.DIRECCION as direccion,
         C.ID as documento, C.EMPRESA as punto_venta,
-        C.DPTO as departamento,C.CLIENTE as tipo_persona,
+        C.DPTO as departamento,C.CLIENTE as tipo_persona,C.EMAIL as correo,
         CI.CODDIAN as ciudad,CI.CIUDAD as ubicacion_envio ,B.NOMBRE as barrio,
         U.NOMBRE as asesor,U.DOC as zona,V.PEDIDO as pedido
         FROM compras  CO
@@ -157,7 +157,7 @@ class Facture
         C.TIPO_REGIMEN as tipo_regimen, C.COD_POSTAL as postal,
         C.TELEFONOS as telefono,C.DIRECCION as direccion,
         C.ID as documento, C.EMPRESA as punto_venta,
-        C.DPTO as departamento,C.CLIENTE as tipo_persona,
+        C.DPTO as departamento,C.CLIENTE as tipo_persona,C.EMAIL as correo,
         CI.CODDIAN as ciudad,CI.CIUDAD as ubicacion_envio ,B.NOMBRE as barrio,
         U.NOMBRE as asesor,U.DOC as zona,V.PEDIDO as pedido
         FROM compras  CO
@@ -223,6 +223,7 @@ class Facture
         WHERE CD.IDCOMPRA = '$id' AND CD.TOTAL >0";
         return ejecutarConsulta($sql);
     }
+
     public function cantidadproductoCompradetalle($id)
     {
         $sql = "SELECT COUNT(*) as tot FROM compras_detalles_dev WHERE IDCOMPRA = '$id'";
@@ -260,6 +261,40 @@ class Facture
         INNER JOIN productos P
         ON P.REFERENCIA = CD2.IDPROD
         WHERE CD.IDCOMPRA = '$id' AND CD.TOTAL >0";
+        return ejecutarConsulta($sql);
+    }
+    public function notadebito($numeronota)
+    {
+        $sql = "SELECT 
+        CO.ID AS id, TP.PREFIJO as prefijo, CO.CONSECUTIVO as consecutivo, 
+        CO.FACT as facturap,CO.FEC_COMPRA as fecha_documento,CO.IDTIPO as tipo_documento,
+        CO.SUBTOTAL as valor_bruto, CO.IVA as valor_iva,
+        CO.RETEFUENTE as valor_retencion,CO.TOTAL as valor_neto,
+        CO.FEC_VENC as fecha_expiracion,CO.OBSERVACION as observacion,
+        FO.DESCRIPCION as manera_pago,
+        C.CODIGO as codigo,C.NIT as nit,C.REPRESENTANTE as nombres,
+        C.TIPO_REGIMEN as tipo_regimen, C.COD_POSTAL as postal,
+        C.TELEFONOS as telefono,C.DIRECCION as direccion,
+        C.ID as documento, C.EMPRESA as punto_venta,
+        C.DPTO as departamento,C.CLIENTE as tipo_persona,C.EMAIL as correo,
+        CI.CODDIAN as ciudad,CI.CIUDAD as ubicacion_envio ,B.NOMBRE as barrio,
+        U.NOMBRE as asesor,U.DOC as zona,V.PEDIDO as pedido
+        FROM compras  CO
+        INNER JOIN ventas V
+        ON V.NOFACTURA = CO.FACT
+        INNER JOIN formas_pagos FO
+        ON FO.ID = V.IDFORMPAGO
+        INNER JOIN tipos_facturas TP
+        ON V.IDTIPO = TP.ID 
+        INNER JOIN usuarios U
+        ON U.USUARIO = V.VENDEDOR
+        INNER JOIN clientes C
+        ON V.TERCERO = C.CODIGO
+        LEFT JOIN barrios B 
+        ON C.BARRIO = B.CODIGO
+        INNER JOIN ciudades CI
+        ON CI.CODIGO = C.CIUDAD
+        WHERE CO.CONSECUTIVO  = '$numeronota' and CO.TOTAL >0 and CO.IDTIPO BETWEEN 4 AND 5";
         return ejecutarConsulta($sql);
     }
 }

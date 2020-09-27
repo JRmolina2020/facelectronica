@@ -12,7 +12,7 @@
     href="https://rawgit.com/nghuuphuoc/bootstrapvalidator/v0.5.0/vendor/bootstrap/css/bootstrap.css" />
   <link rel="stylesheet"
     href="https://rawgit.com/nghuuphuoc/bootstrapvalidator/v0.5.0/dist/css/bootstrapValidator.css" />
-  <title>Login-Atrato V6</title>
+  <title>Login-Atrato v7</title>
 </head>
 
 <body>

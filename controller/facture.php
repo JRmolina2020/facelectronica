@@ -266,7 +266,7 @@ class App
                 "codigo_empresa" =>  80,
                 "tipo_documento" => '01',
                 "prefijo" =>  $this->reg->prefijo,
-                'fecha_documento' => '2020-07-29', //$this->reg->fecha_documento,
+                'fecha_documento' => '2020-09-27', //$this->reg->fecha_documento,
                 "valor_descuento" =>  $this->reg->valor_descuento,
                 "anticipos" => null,
                 "valor_ico" => 0.0,
@@ -368,7 +368,7 @@ class App
             header("Location: ../view/errfacture.php");;
             die();
         } else {
-            //echo json_encode($data, JSON_UNESCAPED_UNICODE);
+            // echo json_encode($data, JSON_UNESCAPED_UNICODE);
             $jstring =  json_encode($data, true);
             $zip = new ZipArchive();
             $filename = "archivo-" . $this->fecha . ".zip";
